@@ -5,31 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Nghệ thuật Ai Cập cổ đại</title>
   <style>
+    html { overflow-y: scroll; }          /* luôn chừa chỗ cho thanh cuộn, tránh bị lệch ngang */
     body { margin: 0; background: #e9ecef; font-family: sans-serif; }
-    header {
-      position: sticky; top: 0; z-index: 10;
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 12px; background: #222; color: #fff;
-    }
-    .title { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    header button, header a {
-      background: #444; color: #fff; border: 0; border-radius: 6px;
-      padding: 8px 12px; font-size: 15px; text-decoration: none; cursor: pointer;
-    }
-    header button:hover, header a:hover { background: #666; }
-    #viewer { overflow-x: auto; padding: 12px; text-align: center; }
-    canvas { display: block; margin: 0 auto 12px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
-    #status { padding: 24px; color: #555; }
+    #viewer { margin: 0; padding: 0; }
+    canvas { display: block; width: 100%; height: auto; margin: 0 0 6px; background: #fff; }
+    #status { padding: 24px; color: #555; text-align: center; }
   </style>
 </head>
 <body>
-  <header>
-    <span class="title">Nghệ thuật Ai Cập cổ đại</span>
-    <button id="zoomOut" aria-label="Thu nhỏ">−</button>
-    <button id="zoomIn" aria-label="Phóng to">+</button>
-    <a id="download" href="Art-of-the-Egyptian-period_compressed.pdf" download>Tải về</a>
-  </header>
-
   <div id="viewer"><div id="status">Đang tải tài liệu...</div></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -40,13 +23,12 @@
       'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     const viewer = document.getElementById('viewer');
-    let pdfDoc = null, zoom = 1, renderId = 0, lastWidth = 0;
+    let pdfDoc = null, renderId = 0, lastWidth = 0;
 
     async function renderAll() {
       if (!pdfDoc) return;
       const myId = ++renderId;
-      const baseWidth = Math.min(document.documentElement.clientWidth - 24, 900);
-      const cssWidth = baseWidth * zoom;
+      const cssWidth = document.documentElement.clientWidth;   // vừa khít chiều ngang cửa sổ
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
       viewer.innerHTML = '';
@@ -60,8 +42,6 @@
         const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
-        canvas.style.width = cssWidth + 'px';
-        canvas.style.height = (viewport.height / dpr) + 'px';
         viewer.appendChild(canvas);
 
         await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
@@ -74,10 +54,7 @@
         viewer.innerHTML = '<div id="status">Không tải được file PDF. Kiểm tra lại tên file trong <code>PDF_URL</code>.</div>';
       });
 
-    document.getElementById('zoomIn').onclick  = () => { zoom = Math.min(zoom + 0.25, 3);   renderAll(); };
-    document.getElementById('zoomOut').onclick = () => { zoom = Math.max(zoom - 0.25, 0.5); renderAll(); };
-    document.getElementById('download').href = PDF_URL;
-
+    // Vẽ lại khi xoay điện thoại / đổi kích thước cửa sổ
     let timer;
     window.addEventListener('resize', () => {
       clearTimeout(timer);
