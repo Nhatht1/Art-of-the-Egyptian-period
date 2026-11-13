@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tài liệu của tôi</title>
+  <title>Nghệ thuật Ai Cập cổ đại</title>
   <style>
     body { margin: 0; background: #e9ecef; font-family: sans-serif; }
     header {
@@ -24,17 +24,17 @@
 </head>
 <body>
   <header>
-    <span class="title">Tài liệu của tôi</span>
+    <span class="title">Nghệ thuật Ai Cập cổ đại</span>
     <button id="zoomOut" aria-label="Thu nhỏ">−</button>
     <button id="zoomIn" aria-label="Phóng to">+</button>
-    <a id="download" href="tai-lieu.pdf" download>Tải về</a>
+    <a id="download" href="Art-of-the-Egyptian-period_compressed.pdf" download>Tải về</a>
   </header>
 
   <div id="viewer"><div id="status">Đang tải tài liệu...</div></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
-    const Art-of-the-Egyptian-period_compressed.pdf = 'tai-lieu.pdf';   // <-- đổi thành tên file PDF của bạn
+    const PDF_URL = 'Art-of-the-Egyptian-period_compressed.pdf';
 
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -52,7 +52,7 @@
       viewer.innerHTML = '';
       for (let n = 1; n <= pdfDoc.numPages; n++) {
         const page = await pdfDoc.getPage(n);
-        if (myId !== renderId) return;           // có lần vẽ mới hơn -> bỏ lần này
+        if (myId !== renderId) return;
         const unscaled = page.getViewport({ scale: 1 });
         const scale = (cssWidth / unscaled.width) * dpr;
         const viewport = page.getViewport({ scale });
@@ -68,17 +68,16 @@
       }
     }
 
-    pdfjsLib.getDocument(Art-of-the-Egyptian-period_compressed.pdf).promise
+    pdfjsLib.getDocument(PDF_URL).promise
       .then(doc => { pdfDoc = doc; lastWidth = document.documentElement.clientWidth; renderAll(); })
       .catch(() => {
-        viewer.innerHTML = '<div id="status">Không tải được file PDF. Kiểm tra lại tên file trong <code>Art-of-the-Egyptian-period_compressed.pdf</code>.</div>';
+        viewer.innerHTML = '<div id="status">Không tải được file PDF. Kiểm tra lại tên file trong <code>PDF_URL</code>.</div>';
       });
 
     document.getElementById('zoomIn').onclick  = () => { zoom = Math.min(zoom + 0.25, 3);   renderAll(); };
     document.getElementById('zoomOut').onclick = () => { zoom = Math.max(zoom - 0.25, 0.5); renderAll(); };
-    document.getElementById('download').href = Art-of-the-Egyptian-period_compressed.pdf;
+    document.getElementById('download').href = PDF_URL;
 
-    // Vẽ lại khi xoay điện thoại / đổi kích thước cửa sổ
     let timer;
     window.addEventListener('resize', () => {
       clearTimeout(timer);
