@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tài liệu của tôi</title>
+  <style>
+    body { margin: 0; background: #e9ecef; font-family: sans-serif; }
+    header {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; background: #222; color: #fff;
+    }
+    .title { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    header button, header a {
+      background: #444; color: #fff; border: 0; border-radius: 6px;
+      padding: 8px 12px; font-size: 15px; text-decoration: none; cursor: pointer;
+    }
+    header button:hover, header a:hover { background: #666; }
+    #viewer { overflow-x: auto; padding: 12px; text-align: center; }
+    canvas { display: block; margin: 0 auto 12px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+    #status { padding: 24px; color: #555; }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="title">Tài liệu của tôi</span>
+    <button id="zoomOut" aria-label="Thu nhỏ">−</button>
+    <button id="zoomIn" aria-label="Phóng to">+</button>
+    <a id="download" href="tai-lieu.pdf" download>Tải về</a>
+  </header>
+
+  <div id="viewer"><div id="status">Đang tải tài liệu...</div></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    const Art-of-the-Egyptian-period_compressed.pdf = 'tai-lieu.pdf';   // <-- đổi thành tên file PDF của bạn
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const viewer = document.getElementById('viewer');
+    let pdfDoc = null, zoom = 1, renderId = 0, lastWidth = 0;
+
+    async function renderAll() {
+      if (!pdfDoc) return;
+      const myId = ++renderId;
+      const baseWidth = Math.min(document.documentElement.clientWidth - 24, 900);
+      const cssWidth = baseWidth * zoom;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      viewer.innerHTML = '';
+      for (let n = 1; n <= pdfDoc.numPages; n++) {
+        const page = await pdfDoc.getPage(n);
+        if (myId !== renderId) return;           // có lần vẽ mới hơn -> bỏ lần này
+        const unscaled = page.getViewport({ scale: 1 });
+        const scale = (cssWidth / unscaled.width) * dpr;
+        const viewport = page.getViewport({ scale });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = cssWidth + 'px';
+        canvas.style.height = (viewport.height / dpr) + 'px';
+        viewer.appendChild(canvas);
+
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      }
+    }
+
+    pdfjsLib.getDocument(Art-of-the-Egyptian-period_compressed.pdf).promise
+      .then(doc => { pdfDoc = doc; lastWidth = document.documentElement.clientWidth; renderAll(); })
+      .catch(() => {
+        viewer.innerHTML = '<div id="status">Không tải được file PDF. Kiểm tra lại tên file trong <code>Art-of-the-Egyptian-period_compressed.pdf</code>.</div>';
+      });
+
+    document.getElementById('zoomIn').onclick  = () => { zoom = Math.min(zoom + 0.25, 3);   renderAll(); };
+    document.getElementById('zoomOut').onclick = () => { zoom = Math.max(zoom - 0.25, 0.5); renderAll(); };
+    document.getElementById('download').href = Art-of-the-Egyptian-period_compressed.pdf;
+
+    // Vẽ lại khi xoay điện thoại / đổi kích thước cửa sổ
+    let timer;
+    window.addEventListener('resize', () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const w = document.documentElement.clientWidth;
+        if (w !== lastWidth) { lastWidth = w; renderAll(); }
+      }, 250);
+    });
+  </script>
+</body>
+</html>
